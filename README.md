@@ -9,6 +9,10 @@ FTC Dashboard provides telemetry and monitoring tools for FTC robots during oper
   - Note: Gamepad support is volatile due to unstable browser APIs
 - Custom dashboard layouts
 - Telemetry CSV export
+- 
+NOTE:
+- This is a live fork that aims to follow upstream
+- It makes minor modifications to the dependencies and internal operations in order to support dynamic loading
 
 Check out our [online documentation](https://acmerobotics.github.io/ftc-dashboard).
 
@@ -21,18 +25,10 @@ Check out our [online documentation](https://acmerobotics.github.io/ftc-dashboar
 ## Basic
 
 1. Open [`build.dependencies.gradle`](https://github.com/FIRST-Tech-Challenge/FtcRobotController/blob/master/build.dependencies.gradle)
-2. In the `repositories` section, add `maven { url = 'https://maven.brott.dev/' }`
+2. In the `repositories` section, add `maven { url = 'https://repo.dairy.foundation/releases' }`
 3. In the `dependencies` section, add `implementation 'com.acmerobotics.dashboard:dashboard:0.4.16'`
 
     Please see [GitHub releases page](https://github.com/acmerobotics/ftc-dashboard/releases) for the latest version number
-
-4. If you’re using OpenRC or have non-standard SDK dependencies, add the following exclusion:
-
-    ```
-    implementation('com.acmerobotics.dashboard:dashboard:0.4.16') {
-      exclude group: 'org.firstinspires.ftc'
-    }
-    ```
 
 # Development
 
@@ -41,7 +37,7 @@ Check out our [online documentation](https://acmerobotics.github.io/ftc-dashboar
 1. Install Node.js
 
    - Note: Node.js 16+ is required for builds to work on M1 MacBooks
-   - Current Node version used in gradle builds can be found in [FtcDashboard/build.gradle](https://github.com/acmerobotics/ftc-dashboard/blob/master/FtcDashboard/build.gradle#L33)
+   - Current Node version used in gradle builds can be found in [FtcDashboard/build.gradle](https://github.com/Dairy-Foundation/ftc-dashboard/blob/master/FtcDashboard/build.gradle#L33)
    - Node version is `18.12.1` as of time of writing
 
 2. Install Yarn
