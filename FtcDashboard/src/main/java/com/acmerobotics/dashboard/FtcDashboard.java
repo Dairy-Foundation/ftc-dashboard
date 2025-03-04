@@ -13,6 +13,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.config.ValueProvider;
 import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
@@ -29,15 +32,31 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl;
-import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.RobotLog;
 import com.qualcomm.robotcore.util.ThreadPool;
 import com.qualcomm.robotcore.util.WebHandlerManager;
 import com.qualcomm.robotcore.util.WebServer;
 import dalvik.system.DexFile;
+import dev.frozenmilk.sinister.Scanner;
+import dev.frozenmilk.sinister.loading.Preload;
+import dev.frozenmilk.sinister.sdk.apphooks.OnCreate;
+import dev.frozenmilk.sinister.sdk.apphooks.OnCreateEventLoop;
+import dev.frozenmilk.sinister.sdk.apphooks.OnCreateMenu;
+import dev.frozenmilk.sinister.sdk.apphooks.OnDestroy;
+import dev.frozenmilk.sinister.sdk.apphooks.SDKOpModeRegistrar;
+import dev.frozenmilk.sinister.sdk.apphooks.SinisterOpModeRegistrar;
+import dev.frozenmilk.sinister.sdk.apphooks.SinisterOpModeRegistrarScanner;
+import dev.frozenmilk.sinister.sdk.apphooks.WebHandlerRegistrar;
+import dev.frozenmilk.sinister.sdk.opmodes.OpModeScanner;
+import dev.frozenmilk.sinister.sdk.opmodes.SinisterRegisteredOpModes;
+import dev.frozenmilk.sinister.sdk.opmodes.TeleopAutonomousOpModeScanner;
+import dev.frozenmilk.sinister.targeting.NarrowSearch;
+import dev.frozenmilk.sinister.targeting.SearchTarget;
+import dev.frozenmilk.util.graph.Graph;
+import dev.frozenmilk.util.graph.rule.AdjacencyRule;
+import dev.frozenmilk.util.graph.rule.AdjacencyRules;
 import fi.iki.elonen.NanoHTTPD;
 import fi.iki.elonen.NanoWSD;
 import java.io.ByteArrayOutputStream;
@@ -50,11 +69,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import org.firstinspires.ftc.ftccommon.external.OnCreate;
-import org.firstinspires.ftc.ftccommon.external.OnCreateEventLoop;
-import org.firstinspires.ftc.ftccommon.external.OnCreateMenu;
-import org.firstinspires.ftc.ftccommon.external.OnDestroy;
-import org.firstinspires.ftc.ftccommon.external.WebHandlerRegistrar;
 import org.firstinspires.ftc.ftccommon.internal.FtcRobotControllerWatchdogService;
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -85,12 +99,42 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
 
     private static FtcDashboard instance;
 
-    @OpModeRegistrar
-    public static void registerOpMode(OpModeManager manager) {
-        if (instance != null && !suppressOpMode) {
-            instance.internalRegisterOpMode(manager);
+    @SuppressWarnings("unused")
+    private static final SinisterOpModeRegistrar sinisterOpModeRegistrarHook = new SinisterOpModeRegistrar() {
+        @Override
+        public void registerOpModes(@NonNull OpModeScanner.RegistrationHelper registrationHelper) {
+            if (instance != null && !suppressOpMode) {
+                registrationHelper.register(
+                        new OpModeMeta.Builder()
+                                .setName("Enable/Disable Dashboard")
+                                .setFlavor(OpModeMeta.Flavor.TELEOP)
+                                .setGroup("dash")
+                                .build(),
+                        new LinearOpMode() {
+                            @Override
+                            public void runOpMode() throws InterruptedException {
+                                telemetry.log().add(
+                                        Misc.formatInvariant("Dashboard is currently %s. Press Start to %s it.",
+                                                getInstance().core.enabled ? "enabled" : "disabled",
+                                                getInstance().core.enabled ? "disable" : "enable"));
+                                telemetry.update();
+
+                                waitForStart();
+
+                                if (isStopRequested()) {
+                                    return;
+                                }
+
+                                if (getInstance().core.enabled) {
+                                    getInstance().disable();
+                                } else {
+                                    getInstance().enable();
+                                }
+                            }
+                        });
+            }
         }
-    }
+    };
 
     /**
      * Call before start to suppress the enable/disable op mode.
@@ -102,64 +146,77 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
     /**
      * Starts the dashboard.
      */
-    @OnCreate
-    public static void start(Context context) {
-        if (instance == null) {
-            instance = new FtcDashboard();
+    @SuppressWarnings("unused")
+    private static final OnCreate onCreateHook = new OnCreate() {
+        @Override
+        public void onCreate(@NonNull Context context) {
+            if (instance == null) {
+                instance = new FtcDashboard();
+            }
         }
-    }
+    };
 
     /**
      * Attaches a web server for accessing the dashboard through the phone (like OBJ/Blocks).
      */
-    @WebHandlerRegistrar
-    public static void attachWebServer(Context context, WebHandlerManager manager) {
-        if (instance != null) {
-            instance.internalAttachWebServer(manager.getWebServer());
+    @SuppressWarnings("unused")
+    private static final WebHandlerRegistrar webHandlerRegistrarHook = new WebHandlerRegistrar() {
+        @Override
+        public void webHandlerRegistrar(@NonNull Context context, @NonNull WebHandlerManager webHandlerManager) {
+            if (instance != null) {
+                instance.internalAttachWebServer(webHandlerManager.getWebServer());
+            }
         }
-    }
+    };
 
     /**
      * Attaches the event loop to the instance for op mode management.
      */
-    @OnCreateEventLoop
-    public static void attachEventLoop(Context context, FtcEventLoop eventLoop) {
-        if (instance != null) {
-            instance.internalAttachEventLoop(eventLoop);
+    @SuppressWarnings("unused")
+    private static final OnCreateEventLoop onCreateEventLoopHook = new OnCreateEventLoop() {
+        @Override
+        public void onCreateEventLoop(@NonNull Context context, @NonNull FtcEventLoop ftcEventLoop) {
+            if (instance != null) {
+                instance.internalAttachEventLoop(ftcEventLoop);
+            }
         }
-    }
+    };
 
     /**
      * Populates the menu with dashboard enable/disable options.
-     *
-     * @param menu menu
      */
-    @OnCreateMenu
-    public static void populateMenu(Context context, Menu menu) {
-        if (instance != null) {
-            instance.internalPopulateMenu(menu);
+    @SuppressWarnings("unused")
+    private static final OnCreateMenu onCreateMenuHook = new OnCreateMenu() {
+        @Override
+        public void onCreateMenu(@NonNull Context context, @NonNull Menu menu) {
+            if (instance != null) {
+                instance.internalPopulateMenu(menu);
+            }
         }
-    }
+    };
 
     /**
      * Stops the instance and the underlying WebSocket server.
      */
-    @OnDestroy
-    public static void stop(Context context) {
-        if (!FtcRobotControllerWatchdogService.isLaunchActivity(
-            AppUtil.getInstance().getRootActivity())) {
-            // prevent premature stop when the app is launched via hardware attachment
-            return;
-        }
+    @SuppressWarnings("unused")
+    private static final OnDestroy onDestroyHook = new OnDestroy() {
+        @Override
+        public void onDestroy(@NonNull Context context) {
+            if (!FtcRobotControllerWatchdogService.isLaunchActivity(
+                    AppUtil.getInstance().getRootActivity())) {
+                // prevent premature stop when the app is launched via hardware attachment
+                return;
+            }
 
-        if (instance != null) {
-            instance.close();
-            instance = null;
+            if (instance != null) {
+                instance.close();
+                instance = null;
+            }
         }
-    }
+    };
 
     /**
-     * Returns the active instance instance. This should be called after {@link #start(Context)}.
+     * Returns the active instance instance. This should be called after {@link OnCreate}.
      *
      * @return active instance instance or null outside of its lifecycle
      */
@@ -172,7 +229,7 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
      */
     public boolean isEnabled() { return core.enabled; }
 
-    private DashboardCore core = new DashboardCore();
+    private final DashboardCore core = new DashboardCore();
 
     private NanoWSD server = new NanoWSD(8000) {
         @Override
@@ -213,6 +270,19 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
         public RobotStatus.OpModeStatus status = RobotStatus.OpModeStatus.STOPPED;
     }
 
+    public void sendOpModes() {
+        FtcDashboard.getInstance().opModeList.with(l -> {
+            l.clear();
+            for (OpModeMeta opModeMeta : SinisterRegisteredOpModes.INSTANCE.getOpModes()) {
+                if (opModeMeta.flavor != OpModeMeta.Flavor.SYSTEM) {
+                    l.add(opModeMeta.name);
+                }
+            }
+            Collections.sort(l);
+            getInstance().sendAll(new ReceiveOpModeList(l));
+        });
+    }
+
     private class GamepadWatchdogRunnable implements Runnable {
         @Override
         public void run() {
@@ -235,24 +305,6 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
                     break;
                 }
             }
-        }
-    }
-
-    private class ListOpModesRunnable implements Runnable {
-        @Override
-        public void run() {
-            RegisteredOpModes.getInstance().waitOpModesRegistered();
-
-            opModeList.with(l -> {
-                l.clear();
-                for (OpModeMeta opModeMeta : RegisteredOpModes.getInstance().getOpModes()) {
-                    if (opModeMeta.flavor != OpModeMeta.Flavor.SYSTEM) {
-                        l.add(opModeMeta.name);
-                    }
-                }
-                Collections.sort(l);
-                sendAll(new ReceiveOpModeList(l));
-            });
         }
     }
 
@@ -499,63 +551,6 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
         }
     }
 
-    private static final Set<String> IGNORED_PACKAGES = new HashSet<>(Arrays.asList(
-        "java",
-        "android",
-        "com.sun",
-        "com.vuforia",
-        "com.google",
-        "kotlin"
-    ));
-
-    private static void addConfigClasses(CustomVariable customVariable) {
-        ClassLoader classLoader = FtcDashboard.class.getClassLoader();
-
-        Context context = AppUtil.getInstance().getApplication();
-        try {
-            DexFile dexFile = new DexFile(context.getPackageCodePath());
-
-            List<String> classNames = Collections.list(dexFile.entries());
-
-            for (String className : classNames) {
-                boolean skip = false;
-                for (String prefix : IGNORED_PACKAGES) {
-                    if (className.startsWith(prefix)) {
-                        skip = true;
-                        break;
-                    }
-                }
-
-                if (skip) {
-                    continue;
-                }
-
-                try {
-                    Class<?> configClass = Class.forName(className, false, classLoader);
-
-                    if (!configClass.isAnnotationPresent(Config.class)
-                        || configClass.isAnnotationPresent(Disabled.class)) {
-                        continue;
-                    }
-
-                    String name = configClass.getSimpleName();
-                    String altName = configClass.getAnnotation(Config.class).value();
-                    if (!altName.isEmpty()) {
-                        name = altName;
-                    }
-
-                    customVariable.putVariable(name,
-                        ReflectionConfig.createVariableFromClass(configClass));
-                } catch (ClassNotFoundException | NoClassDefFoundError ignored) {
-                    // dash is unable to access many classes and reporting every instance
-                    // only clutters the logs
-                }
-            }
-        } catch (IOException e) {
-            RobotLog.logStackTrace(e);
-        }
-    }
-
     private class DashWebSocket extends NanoWSD.WebSocket implements SendFun {
         final SocketHandler sh = core.newSocket(this);
 
@@ -648,13 +643,6 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
     }
 
     private FtcDashboard() {
-        core.withConfigRoot(new CustomVariableConsumer() {
-            @Override
-            public void accept(CustomVariable configRoot) {
-                addConfigClasses(configRoot);
-            }
-        });
-
         try {
             server.start();
         } catch (IOException e) {
@@ -876,9 +864,6 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
         if (opModeManager != null) {
             opModeManager.registerListener(this);
         }
-
-        Thread t = new Thread(new ListOpModesRunnable());
-        t.start();
     }
 
     private void internalPopulateMenu(Menu menu) {
@@ -937,37 +922,6 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
                 return true;
             }
         });
-    }
-
-    private void internalRegisterOpMode(OpModeManager manager) {
-        manager.register(
-            new OpModeMeta.Builder()
-                .setName("Enable/Disable Dashboard")
-                .setFlavor(OpModeMeta.Flavor.TELEOP)
-                .setGroup("dash")
-                .build(),
-            new LinearOpMode() {
-                @Override
-                public void runOpMode() throws InterruptedException {
-                    telemetry.log().add(
-                        Misc.formatInvariant("Dashboard is currently %s. Press Start to %s it.",
-                            core.enabled ? "enabled" : "disabled",
-                            core.enabled ? "disable" : "enable"));
-                    telemetry.update();
-
-                    waitForStart();
-
-                    if (isStopRequested()) {
-                        return;
-                    }
-
-                    if (core.enabled) {
-                        disable();
-                    } else {
-                        enable();
-                    }
-                }
-            });
     }
 
     /**
