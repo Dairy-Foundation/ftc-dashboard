@@ -113,7 +113,7 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
                                 .build(),
                         new LinearOpMode() {
                             @Override
-                            public void runOpMode() throws InterruptedException {
+                            public void runOpMode() {
                                 telemetry.log().add(
                                         Misc.formatInvariant("Dashboard is currently %s. Press Start to %s it.",
                                                 getInstance().core.enabled ? "enabled" : "disabled",
@@ -132,7 +132,8 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
                                     getInstance().enable();
                                 }
                             }
-                        });
+                        }
+                );
             }
         }
     };
