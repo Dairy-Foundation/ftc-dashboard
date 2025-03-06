@@ -86,6 +86,7 @@ import org.firstinspires.ftc.robotserver.internal.webserver.MimeTypesUtil;
 /**
  * Main class for interacting with the instance.
  */
+@Preload
 public class FtcDashboard implements OpModeManagerImpl.Notifications {
     private static final String TAG = "FtcDashboard";
 
@@ -97,7 +98,7 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
     private static final String PREFS_NAME = "FtcDashboard";
     private static final String PREFS_AUTO_ENABLE_KEY = "autoEnable";
 
-    private static FtcDashboard instance;
+    private static FtcDashboard instance = new FtcDashboard();
 
     @SuppressWarnings("unused")
     private static final SinisterOpModeRegistrar sinisterOpModeRegistrarHook = new SinisterOpModeRegistrar() {
