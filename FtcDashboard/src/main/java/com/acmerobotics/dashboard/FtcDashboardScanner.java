@@ -84,10 +84,9 @@ public final class FtcDashboardScanner implements Scanner {
     }
 
     // runs after opmode scanning
-    private final AdjacencyRule<Scanner, Graph<Scanner>> loadAdjacencyRule = afterConfiguration()
-            .and(AdjacencyRules.dependsOnClass(this, OpModeScanner.class))
-            .and(AdjacencyRules.dependsOn(this, SDKOpModeRegistrar.INSTANCE))
-            .and(AdjacencyRules.dependsOn(this, SinisterOpModeRegistrarScanner.INSTANCE));
+    private final AdjacencyRule<Scanner, Graph<Scanner>> loadAdjacencyRule =
+            AdjacencyRules.dependsOnClass(this, OpModeScanner.class)
+                    .and(AdjacencyRules.dependsOn(this, SDKOpModeRegistrar.INSTANCE));
     @NonNull
     @Override
     public AdjacencyRule<Scanner, Graph<Scanner>> getLoadAdjacencyRule() {
@@ -95,10 +94,9 @@ public final class FtcDashboardScanner implements Scanner {
     }
 
     // runs after opmode scanning
-    private final AdjacencyRule<Scanner, Graph<Scanner>> unloadAdjacencyRule = beforeConfiguration()
-            .and(AdjacencyRules.dependsOnClass(this, OpModeScanner.class))
-            .and(AdjacencyRules.dependsOn(this, SDKOpModeRegistrar.INSTANCE))
-            .and(AdjacencyRules.dependsOn(this, SinisterOpModeRegistrarScanner.INSTANCE));
+    private final AdjacencyRule<Scanner, Graph<Scanner>> unloadAdjacencyRule =
+            AdjacencyRules.dependsOnClass(this, OpModeScanner.class)
+                    .and(AdjacencyRules.dependsOn(this, SDKOpModeRegistrar.INSTANCE));
     @NonNull
     @Override
     public AdjacencyRule<Scanner, Graph<Scanner>> getUnloadAdjacencyRule() {
