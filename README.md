@@ -9,7 +9,7 @@ FTC Dashboard provides telemetry and monitoring tools for FTC robots during oper
   - Note: Gamepad support is volatile due to unstable browser APIs
 - Custom dashboard layouts
 - Telemetry CSV export
-- 
+-
 NOTE:
 - This is a live fork that aims to follow upstream
 - It makes minor modifications to the dependencies and internal operations in order to support dynamic loading
@@ -26,7 +26,7 @@ Check out our [online documentation](https://acmerobotics.github.io/ftc-dashboar
 
 1. Open [`build.dependencies.gradle`](https://github.com/FIRST-Tech-Challenge/FtcRobotController/blob/master/build.dependencies.gradle)
 2. In the `repositories` section, add `maven { url = 'https://repo.dairy.foundation/releases' }`
-3. In the `dependencies` section, add `implementation 'com.acmerobotics.slothboard:dashboard:0.1.0+0.4.16'`
+3. In the `dependencies` section, add `implementation 'com.acmerobotics.slothboard:dashboard:0.2.1+0.4.16'`
 
     Please see [GitHub releases page](https://github.com/acmerobotics/ftc-dashboard/releases) for the latest version number
 
