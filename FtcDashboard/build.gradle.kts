@@ -70,7 +70,7 @@ dependencies {
 		}
 	}
 
-	implementation("dev.frozenmilk.sinister:Sloth:0.2.1")
+	implementation("dev.frozenmilk.sinister:Sloth:0.2.2")
 
 	implementation("org.nanohttpd:nanohttpd-websocket:2.3.1") {
 		exclude(module = "nanohttpd")
