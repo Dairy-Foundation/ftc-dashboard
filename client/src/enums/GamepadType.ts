@@ -8,13 +8,17 @@
  * However, gamepad-tester.com also has a number of variants that don't follow the naming scheme but still contain strings
  * in their ID's that correspond to the vendor/product ID for the Dualshocks
  * So it's probably best to identify by checking if PID/VID is in the gamepad.id
+ * 
+ * Dualsense (PS5) also reports itself as "Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: xxxx)"
+ * The product ID for the Dualsense is 0ce6 as reported by gamepad-tester.com and in the list above.
+ * The Dualsense controller can be treated the same as the Dualshock 4 controller as it has the same button layout.
  */
 
 import { Values } from '@/typeHelpers';
 
 const GamepadType = {
   LOGITECH_DUAL_ACTION: 'LOGITECH_DUAL_ACTION',
-  XBOX_360: 'XBOX_360',
+  STANDARD: 'STANDARD', // Standard as defined by W3C Gamepad spec (https://www.w3.org/TR/gamepad/#remapping)
   SONY_DUALSHOCK_4: 'SONY_DUALSHOCK_4',
   UNKNOWN: 'UNKNOWN',
 } as const;
@@ -22,6 +26,7 @@ const GamepadType = {
 const SONY_VID = '054c';
 const DUALSHOCK_GEN_1_PID = '09cc';
 const DUALSHOCK_GEN_2_PID = '05c4';
+const DUALSENSE_PID = '0ce6';
 
 // https://github.com/OpenFTC/Extracted-RC/blob/6720cf8b4296c90b6ea4638752c2df4a52b043b9/Hardware/src/main/java/com/qualcomm/hardware/sony/SonyGamepadPS4.java#L145
 const ETPACK_VID = '7545';
@@ -33,12 +38,10 @@ export default {
   getFromGamepad: (gamepad: Gamepad) => {
     if (gamepad.id.search('Logitech Dual Action') !== -1) {
       return GamepadType.LOGITECH_DUAL_ACTION;
-    } else if (gamepad.id.search('Xbox 360') !== -1) {
-      return GamepadType.XBOX_360;
     } else if (
       gamepad.id.search(SONY_VID) !== -1 &&
       gamepad.id.search(
-        new RegExp(`${DUALSHOCK_GEN_1_PID}|${DUALSHOCK_GEN_2_PID}`, 'i'),
+        new RegExp(`${DUALSHOCK_GEN_1_PID}|${DUALSHOCK_GEN_2_PID}|${DUALSENSE_PID}`, 'i'),
       ) !== -1
     ) {
       return GamepadType.SONY_DUALSHOCK_4;
@@ -48,6 +51,10 @@ export default {
       ) !== -1
     ) {
       return GamepadType.SONY_DUALSHOCK_4;
+    } else if (gamepad.mapping.search('standard') !== -1 
+      || gamepad.id.search('Xbox 360') !== -1
+      || gamepad.id.toLowerCase().search('xinput') !== -1) {
+      return GamepadType.STANDARD;
     } else {
       return GamepadType.UNKNOWN;
     }
@@ -57,7 +64,7 @@ export default {
     switch (gamepadType) {
       case GamepadType.LOGITECH_DUAL_ACTION:
         return 0.06;
-      case GamepadType.XBOX_360:
+      case GamepadType.STANDARD:
         return 0.15;
       case GamepadType.SONY_DUALSHOCK_4:
         return 0.04;

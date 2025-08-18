@@ -13,10 +13,9 @@ const BaseView = forwardRef<
   <div
     ref={ref}
     className={clsx(
-      'flex h-full flex-col overflow-hidden bg-white bg-opacity-75 transition-shadow',
-      isUnlocked
-        ? 'select-none rounded-md bg-opacity-75 shadow-md dark:bg-slate-800'
-        : 'dark:bg-slate-900',
+      'flex h-full flex-col overflow-hidden bg-white transition-shadow',
+      isUnlocked ? 'select-none rounded-md shadow-md' : '',
+      'dark:bg-slate-900',
       className,
     )}
     {...props}
@@ -81,9 +80,10 @@ const BaseViewIcon = ({
 const BaseViewIconButton = ({
   className,
   children,
+  size = 8,
   ...props
-}: JSX.IntrinsicElements['button']) => (
-  <button className={`icon-btn h-8 w-8 ${className}`} {...props}>
+}: JSX.IntrinsicElements['button'] & { size?: number; }) => (
+  <button className={`icon-btn h-${size} w-${size} ${className}`} {...props}>
     {children}
   </button>
 );

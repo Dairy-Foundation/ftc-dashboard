@@ -28,8 +28,6 @@ Check out our [online documentation](https://acmerobotics.github.io/ftc-dashboar
 2. In the `repositories` section, add `maven { url = 'https://repo.dairy.foundation/releases' }`
 3. In the `dependencies` section, add `implementation 'com.acmerobotics.slothboard:dashboard:0.2.4+0.4.17'`
 
-    Please see [GitHub releases page](https://github.com/acmerobotics/ftc-dashboard/releases) for the latest version number
-
 # Development
 
 ## Installation

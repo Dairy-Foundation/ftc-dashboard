@@ -20,9 +20,11 @@ import GraphView from '@/components/views/GraphView/GraphView';
 import FieldView from '@/components/views/FieldView/FieldView';
 import ConfigView from '@/components/views/ConfigView/ConfigView';
 import TelemetryView from '@/components/views/TelemetryView';
+import RecorderView from '@/components/views/RecorderView/RecorderView';
 import CameraView from '@/components/views/CameraView';
 import OpModeView from '@/components/views/OpModeView';
 import LoggingView from '@/components/views/LoggingView/LoggingView';
+import HardwareConfigView from '@/components/views/HardwareConfigView';
 
 import RadialFab from './RadialFab/RadialFab';
 import RadialFabChild from './RadialFab/RadialFabChild';
@@ -65,9 +67,11 @@ const VIEW_MAP: { [key in ConfigurableView]: ReactElement } = {
   [ConfigurableView.GRAPH_VIEW]: <GraphView />,
   [ConfigurableView.CONFIG_VIEW]: <ConfigView />,
   [ConfigurableView.TELEMETRY_VIEW]: <TelemetryView />,
+  [ConfigurableView.RECORDER_VIEW]: <RecorderView />,
   [ConfigurableView.CAMERA_VIEW]: <CameraView />,
   [ConfigurableView.OPMODE_VIEW]: <OpModeView />,
   [ConfigurableView.LOGGING_VIEW]: <LoggingView />,
+  [ConfigurableView.HARDWARE_CONFIG_VIEW]: <HardwareConfigView />,
 };
 
 const LOCAL_STORAGE_LAYOUT_KEY = 'configurableLayoutStorage';
@@ -91,12 +95,7 @@ const Container = forwardRef<
 >((props, ref) => (
   <div
     ref={ref}
-    className={clsx(
-      !props.isLayoutLocked
-        ? 'bg-gray-100 dark:bg-slate-900'
-        : 'bg-white dark:bg-slate-900',
-      'relative overflow-x-hidden overflow-y-scroll p-2 pb-4 transition-colors dark:bg-slate-900',
-    )}
+    className="relative overflow-x-hidden overflow-y-scroll bg-gray-100 dark:bg-slate-800"
     style={{
       height: 'calc(100vh - 52px)',
       backgroundImage: !props.isLayoutLocked
@@ -563,7 +562,10 @@ export default function ConfigurableLayout() {
           margin={isLayoutLocked ? [0, 0] : [GRID_MARGIN, GRID_MARGIN]}
         >
           {gridItems.map((item) => (
-            <div key={item.id}>
+            <div
+              className="border border-gray-100 transition-colors dark:border-slate-800"
+              key={item.id}
+            >
               {cloneElement(VIEW_MAP[item.view], {
                 id: item.id,
                 isDraggable: item.layout.isDraggable,
