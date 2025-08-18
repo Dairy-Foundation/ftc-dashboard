@@ -2,9 +2,10 @@ import com.android.build.gradle.internal.tasks.factory.dependsOn
 
 plugins {
 	id("com.github.node-gradle.node") version "2.2.4"
-	id("dev.frozenmilk.android-library") version "10.2.0-0.1.3"
-	id("dev.frozenmilk.publish") version "0.0.4"
-	id("dev.frozenmilk.doc") version "0.0.4"
+	id("dev.frozenmilk.android-library") version "10.3.0-0.1.4"
+	id("dev.frozenmilk.publish") version "0.0.5"
+	id("dev.frozenmilk.doc") version "0.0.5"
+	id("dev.frozenmilk.build-meta-data") version "0.0.1"
 	id("org.gradle.checkstyle")
 }
 
@@ -44,6 +45,7 @@ android.libraryVariants.all {
 }
 
 ftc {
+	kotlin
 	sdk {
 		configurationNames = setOf("api")
 		RobotCore
@@ -63,22 +65,30 @@ repositories {
 	}
 }
 
+dairyPublishing {
+	gitDir = file("..")
+}
+
 dependencies {
-	afterEvaluate {
-		api("com.acmerobotics.slothboard:core:$version") {
-			isTransitive = false
-		}
+	api("com.acmerobotics.slothboard:core:${dairyPublishing.version}") {
+		isTransitive = false
 	}
 
-	implementation("dev.frozenmilk.sinister:Sloth:0.2.3")
+	implementation("dev.frozenmilk.sinister:Sloth:0.2.4")
 
 	implementation("org.nanohttpd:nanohttpd-websocket:2.3.1") {
 		exclude(module = "nanohttpd")
 	}
 }
 
-dairyPublishing {
-	gitDir = file("..")
+meta {
+	packagePath = "com.acmerobotics.dashboard"
+	name = "Dashboard"
+	registerField("name", "String", "\"com.acmerobotics.slothboard.Dashboard\"")
+	registerField("clean", "Boolean") { "${dairyPublishing.clean}" }
+	registerField("gitRef", "String") { "\"${dairyPublishing.gitRef}\"" }
+	registerField("snapshot", "Boolean") { "${dairyPublishing.snapshot}" }
+	registerField("version", "String") { "\"${dairyPublishing.version}\"" }
 }
 
 publishing {
