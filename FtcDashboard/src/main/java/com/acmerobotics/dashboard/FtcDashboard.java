@@ -78,14 +78,7 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import org.firstinspires.ftc.ftccommon.internal.FtcRobotControllerWatchdogService;
@@ -297,16 +290,21 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
     }
 
     public void sendOpModes() {
-        FtcDashboard.getInstance().opModeInfoList.with(l -> {
-            l.clear();
-            for (OpModeMeta opModeMeta : SinisterRegisteredOpModes.INSTANCE.getOpModes()) {
-                if (opModeMeta.flavor != OpModeMeta.Flavor.SYSTEM) {
-                    l.add(new OpModeInfo(opModeMeta.name, opModeMeta.group));
-                }
+        List<OpModeInfo> infoList = new ArrayList<>();
+
+        for (OpModeMeta opModeMeta : SinisterRegisteredOpModes.INSTANCE.getOpModes()) {
+            if (opModeMeta.flavor != OpModeMeta.Flavor.SYSTEM) {
+                infoList.add(new OpModeInfo(opModeMeta.name, opModeMeta.group));
             }
-            Collections.sort(l);
-            getInstance().sendAll(new ReceiveOpModeList(l));
+        }
+
+        infoList.sort(Comparator.comparing(OpModeInfo::getGroup).thenComparing(OpModeInfo::getName));
+        opModeInfoList.with(infoListShared -> {
+            infoListShared.clear();
+            infoListShared.addAll(infoList);
         });
+
+        sendAll(new ReceiveOpModeList(infoList));
     }
 
     private class GamepadWatchdogRunnable implements Runnable {
