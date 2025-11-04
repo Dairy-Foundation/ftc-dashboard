@@ -236,7 +236,7 @@ public class HardwareOpMode extends OpMode {
         ConfigVariable<?> targetPosVar = config.getVariable("Target Position");
         if (targetPosVar != null) {
             try {
-                motor.setTargetPosition((int) targetPosVar.getValue());
+                motor.setTargetPosition((Integer) targetPosVar.getValue());
             } catch (Exception e) {
                 System.out.println("Error setting target position: " + e);
             }
@@ -341,7 +341,7 @@ public class HardwareOpMode extends OpMode {
         ConfigVariable<?> positionVar = config.getVariable("Position");
         if (positionVar == null) return;
 
-        double newPosition = (double) positionVar.getValue();
+        double newPosition = (Double) positionVar.getValue();
         if (newPosition != -1.0) {
             servo.setPosition(newPosition);
         }
