@@ -243,7 +243,7 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
 
     private final Mutex<OpModeAndStatus> activeOpMode = new Mutex<>(new OpModeAndStatus());
 
-    private final Mutex<List<String>> opModeList = new Mutex<>(new ArrayList<>());
+    private final Mutex<List<OpModeInfo>> opModeInfoList = new Mutex<>(new ArrayList<>());
 
     private ExecutorService gamepadWatchdogExecutor;
     private long lastGamepadTimestamp;
@@ -262,16 +262,30 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
     }
 
     public void sendOpModes() {
-        FtcDashboard.getInstance().opModeList.with(l -> {
-            l.clear();
-            for (OpModeMeta opModeMeta : SinisterRegisteredOpModes.INSTANCE.getOpModes()) {
-                if (opModeMeta.flavor != OpModeMeta.Flavor.SYSTEM) {
-                    l.add(opModeMeta.name);
-                }
+        List<OpModeInfo> infoList = new ArrayList<>();
+
+        for (OpModeMeta opModeMeta : SinisterRegisteredOpModes.INSTANCE.getOpModes()) {
+            if (opModeMeta.flavor != OpModeMeta.Flavor.SYSTEM) {
+                infoList.add(new OpModeInfo(opModeMeta.name, opModeMeta.group));
             }
-            Collections.sort(l);
-            getInstance().sendAll(new ReceiveOpModeList(l));
+        }
+
+        // Sort op mode info list by group, then by name
+        infoList.sort((a, b) -> {
+            int groupComparison = a.getGroup().compareToIgnoreCase(b.getGroup());
+            if (groupComparison != 0) {
+                return groupComparison;
+            }
+            return a.getName().compareToIgnoreCase(b.getName());
         });
+
+        // Update the shared opModeInfoList
+        opModeInfoList.with(infoListShared -> {
+            infoListShared.clear();
+            infoListShared.addAll(infoList);
+        });
+
+        sendAll(new ReceiveOpModeList(infoList));
     }
 
     private class GamepadWatchdogRunnable implements Runnable {
@@ -296,22 +310,6 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
                     break;
                 }
             }
-        }
-    }
-
-    private class ListOpModesRunnable implements Runnable {
-        @Override
-        public void run() {
-            opModeList.with(l -> {
-                l.clear();
-                for (OpModeMeta opModeMeta : SinisterRegisteredOpModes.INSTANCE.getOpModes()) {
-                    if (opModeMeta.flavor != OpModeMeta.Flavor.SYSTEM) {
-                        l.add(opModeMeta.name);
-                    }
-                }
-                Collections.sort(l);
-                sendAll(new ReceiveOpModeList(l));
-            });
         }
     }
 
@@ -752,9 +750,9 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
         protected void onOpen() {
             sh.onOpen();
 
-            opModeList.with(l -> {
-                if (l.size() > 0) {
-                    send(new ReceiveOpModeList(l));
+            opModeInfoList.with(infoList -> {
+                if (!infoList.isEmpty()) {
+                    send(new ReceiveOpModeList(new ArrayList<>(infoList)));
                 }
             });
 
@@ -1090,8 +1088,7 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
             opModeManager.registerListener(this);
         }
 
-        Thread t = new Thread(new ListOpModesRunnable());
-        t.start();
+        sendOpModes();
 
         // This gets called every time the robot soft-restarts, which includes when modifying/switching configs
         Thread hardwareConfigThread = new Thread(new ListHardwareConfigsRunnable());
