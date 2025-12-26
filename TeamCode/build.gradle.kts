@@ -1,15 +1,11 @@
 plugins {
-	id("dev.frozenmilk.teamcode") version "10.3.0-0.1.4"
-	id("dev.frozenmilk.sinister.sloth.load") version "0.2.2"
+    id("dev.frozenmilk.teamcode") version "11.0.0-1.0.0"
+    id("dev.frozenmilk.sinister.sloth.load") version "0.2.4"
 }
 
 ftc {
-	// use this to easily add more FTC libraries
-
-	// adds support for kotlin
-	kotlin
-}
-
-dependencies {
-	implementation("com.acmerobotics.slothboard:dashboard")
+    kotlin()
+    sdk.TeamCode()
+    implementation(dairy.Sloth)
+    implementation(dairy.slothboard)
 }
