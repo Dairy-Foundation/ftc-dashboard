@@ -16,6 +16,8 @@ import android.widget.TextView;
 
 import com.acmerobotics.dashboard.config.ValueProvider;
 import com.acmerobotics.dashboard.config.variable.CustomVariable;
+import com.acmerobotics.dashboard.limelight.LimelightProxyManager;
+import com.acmerobotics.dashboard.OpModeInfo;
 import com.acmerobotics.dashboard.message.Message;
 import com.acmerobotics.dashboard.message.redux.DeleteHardwareConfig;
 import com.acmerobotics.dashboard.message.redux.InitOpMode;
@@ -268,6 +270,8 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
 
     private RobotConfigFileManager hardwareConfigManager = new RobotConfigFileManager();
     private final Mutex<SortedMap<String, RobotConfigFile>> hardwareConfigList = new Mutex<>(new TreeMap<>());
+
+    private final LimelightProxyManager limelightProxyManager = new LimelightProxyManager();
 
     private static class OpModeAndStatus {
         public OpMode opMode;
@@ -1173,6 +1177,8 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
         logcatMonitorRunnable = new LogcatMonitorRunnable();
         logcatMonitorExecutor.submit(logcatMonitorRunnable);
 
+        limelightProxyManager.start();
+
         core.enabled = true;
 
         updateStatusView();
@@ -1195,6 +1201,8 @@ public class FtcDashboard implements OpModeManagerImpl.Notifications {
         }
 
         stopCameraStream();
+
+        limelightProxyManager.stop();
 
         core.enabled = false;
 
