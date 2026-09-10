@@ -12,3 +12,7 @@ includeBuild("../FtcDashboard") {
 		substitute(module("com.acmerobotics.slothboard:dashboard")).using(project(":"))
 	}
 }
+
+plugins {
+	id("org.gradle.toolchains.foojay-resolver-convention").version("1.0.0")
+}

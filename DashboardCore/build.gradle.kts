@@ -1,7 +1,7 @@
 plugins {
-	id("dev.frozenmilk.jvm-library") version "11.0.0-1.0.0"
-	id("dev.frozenmilk.publish") version "0.0.4"
-	id("dev.frozenmilk.doc") version "0.0.4"
+	id("dev.frozenmilk.jvm-library") version "11.2.1-1.2.0"
+	id("dev.frozenmilk.publish") version "0.1.0"
+	id("dev.frozenmilk.doc") version "0.1.0"
 	id("org.gradle.checkstyle")
 }
 

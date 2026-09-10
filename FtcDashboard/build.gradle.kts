@@ -1,11 +1,11 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 
 plugins {
-    id("com.github.node-gradle.node") version "2.2.4"
-    id("dev.frozenmilk.android-library") version "11.0.0-1.0.0"
-    id("dev.frozenmilk.publish") version "0.0.5"
-    id("dev.frozenmilk.doc") version "0.0.5"
-    id("dev.frozenmilk.build-meta-data") version "0.0.2"
+    id("com.github.node-gradle.node") version "7.1.0"
+    id("dev.frozenmilk.android-library") version "11.2.1-1.2.0"
+    id("dev.frozenmilk.publish") version "0.1.0"
+    id("dev.frozenmilk.doc") version "0.1.0"
+    id("dev.frozenmilk.build-meta-data") version "0.1.0"
     id("org.gradle.checkstyle")
 }
 
@@ -18,7 +18,7 @@ checkstyle {
 node {
     version = "18.12.1"
     download = true
-    nodeModulesDir = file("${project.projectDir}/../client")
+    nodeProjectDir = file("${project.projectDir}/../client")
 }
 
 val yarnBuild = tasks.named("yarn_build")
@@ -62,7 +62,7 @@ ftc {
         compileOnly(appcompat)
     }
     dairy {
-        implementation(Sloth)
+        implementation(Sloth("0.3.0"))
     }
 }
 
