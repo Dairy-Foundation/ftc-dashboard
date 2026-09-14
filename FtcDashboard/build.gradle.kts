@@ -62,7 +62,7 @@ ftc {
         compileOnly(appcompat)
     }
     dairy {
-        implementation(Sloth("0.3.0"))
+        implementation(Sloth("0.3.1"))
     }
 }
 
